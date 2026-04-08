@@ -1335,7 +1335,7 @@ input, textarea, select, button { font-family: var(--font-main) !important; }
 @media (min-width:840px) and (max-width:1023px) { :root{--sidebar-w:200px} .review-wrap{padding:18px 20px 60px} .info-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))} .two-col{gap:14px} .mf-detail-grid{grid-template-columns:1fr} .list-wrap{padding:18px 20px} .admin-main{padding:18px 22px} }
 @media (max-width:839px) {
   :root{--sidebar-w:var(--sidebar-w-sm);--topbar-h:52px}
-  .login-brand{display:none} .login-card{width:100%;max-width:440px;padding:32px 28px} .login-inner{padding:24px 16px;justify-content:center}
+  .login-brand{display:none} .login-card{width:100%;max-width:440px;padding:32px 28px} .login-inner{padding:24px 16px;justify-content:center;grid-template-columns:1fr;min-height:auto}
   .sidebar{width:var(--sidebar-w-sm)} .sb-info{display:none} .sb-item{justify-content:center;padding:12px 0}
   .review-wrap{padding:14px 14px 60px} .iv-grid{grid-template-columns:1fr} .two-col{grid-template-columns:1fr;gap:12px} .stat-grid{grid-template-columns:1fr 1fr} .mf-detail-grid{grid-template-columns:1fr}
   .grade-row{gap:5px} .g-chip{min-width:52px;padding:7px 10px} .cand-header{flex-wrap:wrap;gap:10px}
@@ -1343,6 +1343,7 @@ input, textarea, select, button { font-family: var(--font-main) !important; }
   .admin-main{padding:14px 16px} .admin-sidebar{width:160px} .admin-menu-item{font-size:0.75rem;padding:10px 14px}
   .eval-tabs{gap:2px} .eval-tab{padding:7px 10px;font-size:0.69rem}
   .sync-chip{display:none} .now-reviewing{max-width:160px}
+  .multi-yr{min-width:0;flex:1 1 calc(50% - 7px)}
 }
 @media (max-width:599px) {
   :root{--topbar-h:48px}
@@ -1365,6 +1366,9 @@ input, textarea, select, button { font-family: var(--font-main) !important; }
   .topbar-user{gap:6px}
   .confirm-actions{flex-direction:column}
   .confirm-actions .btn-go,.confirm-actions .btn-cancel-c{width:100%;text-align:center}
+  .multi-yr{min-width:0;flex:1 1 100%}
+  .admin-select{min-width:0;width:100%}
+  #page-confirm .cand-table{min-width:0}
 }
 /* ── 초소형 모바일 (아이폰SE·갤럭시S22 등 360-430px) ── */
 @media (max-width:430px) {
@@ -1403,6 +1407,10 @@ input, textarea, select, button { font-family: var(--font-main) !important; }
   .stat-box{padding:12px 14px}
   .stat-box .sn{font-size:1.3rem}
   .eval-tab{padding:6px 8px;font-size:0.65rem}
+  .mf-chip{min-width:44px}
+  .list-search-box{min-width:0;width:100%}
+  .multi-yr{min-width:0;flex:1 1 100%}
+  .login-inner{width:calc(100% - 16px)}
 }
 @media (min-width:1600px) { :root{--sidebar-w:300px} .review-wrap{padding:36px 48px 80px;max-width:1200px} .main-content{display:flex;justify-content:center} }
 </style>
