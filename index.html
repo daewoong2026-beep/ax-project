@@ -2082,7 +2082,7 @@ input, textarea, select, button { font-family: var(--font-main) !important; }
                 <span></span>
               </div>
               <div class="interviewer-list" id="iv-list"></div>
-              <button class="btn-admin btn-admin-secondary" style="margin-top:12px" onclick="addInterviewer()">+ 면접관 추가</button>
+              <button class="btn-admin btn-admin-secondary" style="margin-top:12px" onclick="addIvRow()">+ 면접관 추가</button>
             </div>
             <div style="display:flex;gap:10px;justify-content:flex-end">
               <button class="btn-admin btn-admin-secondary" onclick="loadAdminMap()">초기화</button>
@@ -5179,7 +5179,7 @@ function switchIvSubTab(tab, btn){
     tbtn.style.color = active ? 'var(--pr-700)' : 'var(--g500)';
   });
 }
-function addInterviewer(){
+function addIvRow(){
   const list=$('iv-list'); const rows=list.querySelectorAll('.interviewer-row');
   list.insertAdjacentHTML('beforeend',makeIvRow(rows.length,'','',''));
 }
