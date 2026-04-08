@@ -3011,7 +3011,7 @@ const _sb = {
   from(table) { return new SbQuery(table); },
   channel() { return { on() { return this; }, subscribe() { return this; } }; }
 };
-const SYNC_MS     = 60000;
+const SYNC_MS     = 10000; /* 10초 폴링 — Realtime 미지원 환경 대비 */
 
 /* ── 샘플 관리자 계정 (추후 전달 시 교체) ── */
 const ADMIN_SAMPLE = { id: 'admin', pw: 'daewoong2026!' };
@@ -5136,6 +5136,8 @@ async function saveIvBulk() {
     $('iv-upload-file').value = '';
     _ivBulkData = [];
     showAdminToast(`✅ 면접 평가의견 ${saved}명 일괄 저장 완료`);
+    /* 면접관 화면에도 즉시 반영 */
+    await refreshCandidates();
   } catch(e) {
     st.innerHTML = `<span style="color:#dc2626">❌ 저장 실패: ${e.message||e}</span>`;
   } finally {
@@ -5171,6 +5173,8 @@ async function saveAdminMap(){
   } catch(e) { console.warn('Supabase saveMap 실패', String(e?.message||e)); }
   showAdminToast('✅ 면접 평가의견이 저장되었습니다');
   if (curPage === 'review' && candidates[curIdx]?.sabun === c.sabun) renderCandidate(curIdx);
+  /* 면접관 화면에도 즉시 반영되도록 전체 데이터 새로고침 */
+  await refreshCandidates();
 }
 
 /* ── 인증코드 관리 ── */
