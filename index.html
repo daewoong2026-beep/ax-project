@@ -5320,6 +5320,14 @@ function adminTopSearchSelect(idx) {
     return;
   }
 
+  /* 면접 평가의견 패널: 해당 지원자 바로 선택 */
+  if (panelId === 'panel-map') {
+    const sel = $('admin-cand-sel-map');
+    const realIdx = candidates.indexOf(c);
+    if (sel && realIdx >= 0) { sel.value = realIdx; loadAdminMap(); }
+    return;
+  }
+
   /* 인사이트 패널: 해당 인원 직접 선택 (탭 이동 없음) */
   if (panelId === 'panel-insight') {
     const realIdx = candidates.indexOf(c);
