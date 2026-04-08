@@ -2879,13 +2879,15 @@ const GAS_URL     = ''; // (deprecated — Supabase로 전환됨)
    아래 URL과 ANON_KEY를 본인의 Supabase 프로젝트 값으로 교체하세요.
    Supabase Console → Settings → API 에서 확인 가능합니다.
 ══════════════════════════════════════════════════════════ */
-const SUPABASE_URL  = 'https://srxfhdiugbgdhlnieoxa.supabase.co';
-const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNyeGZoZGl1Z2JnZGhsbmllb3hhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ5NTg1MTcsImV4cCI6MjA5MDUzNDUxN30.c5LMtdKHW3lP3r4IIRU87Ir07TZ9ZUVhLqW5zYxeyjE';
+const SUPABASE_URL  = 'https://pmfrxiccvvsovofcgcly.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBtZnJ4aWNjdnZzb3ZvZmNnY2x5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ5MzQwMzQsImV4cCI6MjA5MDUxMDAzNH0._NUYL2RqyszKOn_xPQnS7qnhDW6JNFUN0g3TZtHZORc';
 /* ══ Supabase REST API 래퍼 (SDK 없이 fetch 직접 사용) ══ */
 const _sbHeaders = () => ({
   'apikey': SUPABASE_ANON,
   'Authorization': 'Bearer ' + SUPABASE_ANON,
-  'Content-Type': 'application/json'
+  'Content-Type': 'application/json',
+  'Accept-Profile': 'ax',
+  'Content-Profile': 'ax'
 });
 
 class SbQuery {
