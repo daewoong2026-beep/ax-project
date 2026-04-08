@@ -3670,6 +3670,10 @@ async function doLogin() {
     /* 로그인 이력 남지 않도록 입력 필드 초기화 */
     $('f-sabun').value = ''; $('f-name').value = '';
     const mySabuns = entry.sabuns || [];
+    if (!mySabuns.length) {
+      showErr('배정된 지원자가 없습니다. 관리자에게 지원자 매핑을 요청해 주세요.');
+      return;
+    }
     /* Supabase에서 데이터 로드 */
     try {
       const { data, error } = await _sb.from('employees').select('*').in('sabun', mySabuns);
@@ -5809,6 +5813,19 @@ async function uploadFile1() {
         }
       }
     }
+
+    /* ── interviewerOrder 기반으로 INTERVIEWER_MAP.sabuns 보완 ── */
+    employees.forEach(emp => {
+      (emp.interviewerOrder || []).forEach(iv => {
+        if (!iv.sabun || !/^\d+$/.test(iv.sabun) || !iv.name) return;
+        if (!INTERVIEWER_MAP[iv.sabun]) {
+          INTERVIEWER_MAP[iv.sabun] = { name: iv.name, sabuns: [] };
+        }
+        if (!INTERVIEWER_MAP[iv.sabun].sabuns.includes(emp.sabun)) {
+          INTERVIEWER_MAP[iv.sabun].sabuns.push(emp.sabun);
+        }
+      });
+    });
 
     /* ── 면접관 정보도 DB에 저장 ── */
     await saveInterviewersToDB();
