@@ -3011,7 +3011,7 @@ const _sb = {
   from(table) { return new SbQuery(table); },
   channel() { return { on() { return this; }, subscribe() { return this; } }; }
 };
-const SYNC_MS     = 10000; /* 10초 폴링 — Realtime 미지원 환경 대비 */
+const SYNC_MS     = 3000; /* 3초 폴링 — 사실상 실시간 */
 
 /* ── 샘플 관리자 계정 (추후 전달 시 교체) ── */
 const ADMIN_SAMPLE = { id: 'admin', pw: 'daewoong2026!' };
@@ -3303,6 +3303,21 @@ function evalSortKey(yr) {
 function renderCandidate(idx) {
   const c = candidates[idx]; if (!c) return;
   mfIdx = 0;
+
+  /* ── 화면 진입 시 해당 지원자의 최신 interviews/application을 DB에서 즉시 가져와 갱신 ── */
+  (async () => {
+    try {
+      const { data } = await _sb.from('employees').select('interviews,application,monthlyFeedback').eq('sabun', c.sabun).single();
+      if (!data) return;
+      const changed = JSON.stringify(c.interviews||[]) !== JSON.stringify(data.interviews||[]);
+      if (changed) {
+        c.interviews = data.interviews || [];
+        c.application = data.application || c.application;
+        c.monthlyFeedback = data.monthlyFeedback || c.monthlyFeedback;
+        if (curIdx === idx && curPage === 'review') renderCandidate(idx);
+      }
+    } catch(e) { /* 무시 */ }
+  })();
 
   /* 종합평가 */
   const sortedEval = (c.annualEval||[]).slice().sort((a,b)=>evalSortKey(a.year).localeCompare(evalSortKey(b.year)));
@@ -3842,6 +3857,15 @@ function startAutoSync(code) {
   syncTimer = setInterval(async () => {
     await refreshCandidates(code);
   }, SYNC_MS);
+
+  /* ── 탭 복귀 / 윈도우 포커스 시 즉시 새로고침 ── */
+  if (!window._syncBoundEvents) {
+    window._syncBoundEvents = true;
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) refreshCandidates();
+    });
+    window.addEventListener('focus', () => refreshCandidates());
+  }
 }
 
 /* ── Supabase에서 후보자 데이터 새로고침 ── */
