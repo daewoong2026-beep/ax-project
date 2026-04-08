@@ -2095,14 +2095,39 @@ input, textarea, select, button { font-family: var(--font-main) !important; }
         <div id="iv-pane-upload" style="display:none">
           <div class="admin-form-section">
             <div class="admin-form-section-title">📤 면접 평가의견 대량 업로드</div>
-            <div style="background:var(--g50);border:2px dashed var(--g300);border-radius:var(--radius);padding:32px 24px;text-align:center;margin-bottom:16px">
-              <div style="font-size:2rem;margin-bottom:10px">📋</div>
-              <div style="font-size:0.9rem;font-weight:700;color:var(--g700);margin-bottom:6px">업로드 양식 준비 중</div>
-              <div style="font-size:0.78rem;color:var(--g500);line-height:1.6">대량 업로드 형식이 확정되면 여기서 엑셀 파일로<br>면접 평가의견을 일괄 등록할 수 있습니다.</div>
+            <div style="background:var(--g50);border:1px solid var(--g200);border-radius:var(--radius);padding:14px 16px;margin-bottom:16px;font-size:0.78rem;color:var(--g600);line-height:1.8">
+              <strong style="color:var(--g800)">양식 안내</strong><br>
+              · <strong>I열</strong>: 지원자 사번 &nbsp;·&nbsp; <strong>W열</strong>: 인터뷰어 (영어(한글) 형식) &nbsp;·&nbsp; <strong>X열</strong>: 등급 (합격/불합격) &nbsp;·&nbsp; <strong>Y열</strong>: 코멘트<br>
+              · 같은 지원자에 면접관이 여러 명이면 행을 나눠서 작성<br>
+              · 기존 면접의견은 <strong>덮어쓰기</strong> 됩니다
             </div>
-            <div style="opacity:0.4;pointer-events:none;display:flex;align-items:center;gap:12px">
-              <input type="file" accept=".xlsx,.xls" disabled style="font-size:0.82rem;flex:1">
-              <button class="btn-admin btn-admin-primary" disabled>📥 업로드</button>
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+              <input type="file" id="iv-upload-file" accept=".xlsx,.xls" style="font-size:0.82rem;flex:1">
+              <button class="btn-admin btn-admin-primary" onclick="uploadIvBulk()">📥 업로드</button>
+            </div>
+            <div id="iv-upload-status" style="font-size:0.78rem;color:var(--g500);min-height:20px"></div>
+            <!-- 미리보기 테이블 -->
+            <div id="iv-upload-preview" style="display:none;margin-top:16px">
+              <div style="font-size:0.82rem;font-weight:700;color:var(--g700);margin-bottom:8px">📋 파싱 결과 미리보기</div>
+              <div style="overflow-x:auto">
+                <table style="width:100%;border-collapse:collapse;font-size:0.76rem">
+                  <thead>
+                    <tr style="background:var(--g100)">
+                      <th style="padding:7px 10px;text-align:left;border:1px solid var(--g200);white-space:nowrap">지원자 사번</th>
+                      <th style="padding:7px 10px;text-align:left;border:1px solid var(--g200);white-space:nowrap">지원자 이름</th>
+                      <th style="padding:7px 10px;text-align:left;border:1px solid var(--g200);white-space:nowrap">면접관</th>
+                      <th style="padding:7px 10px;text-align:left;border:1px solid var(--g200);white-space:nowrap">등급</th>
+                      <th style="padding:7px 10px;text-align:left;border:1px solid var(--g200)">코멘트</th>
+                      <th style="padding:7px 10px;text-align:center;border:1px solid var(--g200);white-space:nowrap">상태</th>
+                    </tr>
+                  </thead>
+                  <tbody id="iv-preview-body"></tbody>
+                </table>
+              </div>
+              <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:14px">
+                <button class="btn-admin btn-admin-secondary" onclick="$('iv-upload-preview').style.display='none';$('iv-upload-file').value=''">취소</button>
+                <button class="btn-admin btn-admin-primary" id="iv-bulk-save-btn" onclick="saveIvBulk()">💾 DB에 저장</button>
+              </div>
             </div>
           </div>
         </div>
@@ -5004,6 +5029,120 @@ function makeIvRow(i,name,result,comment){
     <button class="btn-remove-iv" onclick="removeIvRow(${i})" title="삭제" style="width:28px;height:28px;padding:0;display:flex;align-items:center;justify-content:center">✕</button>
   </div>`;
 }
+/* ── 면접 평가의견 대량 업로드 ── */
+let _ivBulkData = []; // 파싱된 미리보기 데이터
+
+async function uploadIvBulk() {
+  const fi = $('iv-upload-file');
+  const st = $('iv-upload-status');
+  if (!fi || !fi.files[0]) { st.textContent = '⚠️ 파일을 선택해 주세요.'; return; }
+  st.textContent = '파싱 중…';
+  try {
+    const ab = await fi.files[0].arrayBuffer();
+    const wb = XLSX.read(ab, { type: 'array' });
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    const raw = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+
+    /* 헤더 행 찾기: I열(col8)이 '직원 ID'인 행 */
+    let hdrIdx = raw.findIndex(row => String(row[8]||'').includes('직원') || String(row[8]||'').includes('ID') || String(row[8]||'').includes('사번'));
+    if (hdrIdx < 0) hdrIdx = 0; // fallback: 첫 행
+
+    const rows = raw.slice(hdrIdx + 1).filter(r => String(r[8]||'').trim() && /\d{5,}/.test(String(r[8])));
+
+    /* 한글 이름 추출: "Seokwoo Lee （이석우）" → "이석우" */
+    const extractKorName = (v) => {
+      const s = String(v || '').trim();
+      // （한글） 또는 (한글) 패턴
+      const m = s.match(/[（(]([가-힣\s]+)[）)]/);
+      if (m) return m[1].trim();
+      // 전체가 한글이면 그대로
+      if (/^[가-힣\s]+$/.test(s)) return s;
+      return s; // 매칭 없으면 원본
+    };
+
+    /* 등급 변환: 합격→O, 불합격→X */
+    const toResult = (v) => {
+      const s = String(v || '').trim();
+      if (s === '합격' || s === 'O' || s === 'Pass' || s.toLowerCase() === 'pass') return 'O';
+      if (s === '불합격' || s === 'X' || s === 'Fail' || s.toLowerCase() === 'fail') return 'X';
+      return '';
+    };
+
+    _ivBulkData = rows.map(r => ({
+      sabun: String(r[8]).trim(),
+      interviewer: extractKorName(r[22]),
+      result: toResult(r[23]),
+      comment: String(r[24] || '').trim()
+    })).filter(d => d.sabun && d.interviewer);
+
+    if (!_ivBulkData.length) { st.innerHTML = '<span style="color:#dc2626">❌ 유효한 데이터가 없습니다. I/W/X/Y 열을 확인해 주세요.</span>'; return; }
+
+    /* 미리보기 렌더 */
+    const tbody = $('iv-preview-body');
+    const candMap = {};
+    candidates.forEach(c => { candMap[c.sabun] = c.name; });
+
+    tbody.innerHTML = _ivBulkData.map(d => {
+      const found = !!candMap[d.sabun];
+      const statusHtml = found
+        ? `<span style="color:#16a34a;font-weight:700">✅ 매칭</span>`
+        : `<span style="color:#dc2626;font-weight:700">❌ 없음</span>`;
+      return `<tr style="border-bottom:1px solid var(--g100)">
+        <td style="padding:6px 10px;border:1px solid var(--g200)">${d.sabun}</td>
+        <td style="padding:6px 10px;border:1px solid var(--g200)">${candMap[d.sabun]||'—'}</td>
+        <td style="padding:6px 10px;border:1px solid var(--g200)">${d.interviewer}</td>
+        <td style="padding:6px 10px;border:1px solid var(--g200);text-align:center">${d.result==='O'?'<span style="color:#16a34a;font-weight:700">O 합격</span>':d.result==='X'?'<span style="color:#dc2626;font-weight:700">X 불합격</span>':'—'}</td>
+        <td style="padding:6px 10px;border:1px solid var(--g200);max-width:320px;white-space:pre-wrap;word-break:break-all">${d.comment||'—'}</td>
+        <td style="padding:6px 10px;border:1px solid var(--g200);text-align:center">${statusHtml}</td>
+      </tr>`;
+    }).join('');
+
+    const matched = _ivBulkData.filter(d => candMap[d.sabun]).length;
+    st.innerHTML = `<span style="color:#16a34a">✅ ${_ivBulkData.length}건 파싱 완료 (매칭: ${matched}건 / 미매칭: ${_ivBulkData.length - matched}건)</span>`;
+    $('iv-upload-preview').style.display = '';
+  } catch(e) {
+    st.innerHTML = `<span style="color:#dc2626">❌ 오류: ${e.message||e}</span>`;
+  }
+}
+
+async function saveIvBulk() {
+  if (!_ivBulkData.length) return;
+  const btn = $('iv-bulk-save-btn');
+  btn.disabled = true; btn.textContent = '저장 중…';
+  const st = $('iv-upload-status');
+
+  /* 지원자별로 그룹핑 */
+  const grouped = {};
+  _ivBulkData.forEach(d => {
+    if (!grouped[d.sabun]) grouped[d.sabun] = [];
+    grouped[d.sabun].push({ interviewer: d.interviewer, result: d.result, comment: d.comment });
+  });
+
+  const candMap = {};
+  candidates.forEach(c => { candMap[c.sabun] = c; });
+
+  let saved = 0, skipped = 0;
+  try {
+    for (const [sabun, ivs] of Object.entries(grouped)) {
+      const c = candMap[sabun];
+      if (!c) { skipped++; continue; }
+      const { error } = await _sb.from('employees').update({ interviews: ivs }).eq('sabun', sabun);
+      if (error) throw new Error(error.message);
+      c.interviews = ivs; // 로컬 반영
+      saved++;
+    }
+    st.innerHTML = `<span style="color:#16a34a">✅ ${saved}명 저장 완료${skipped ? ` (미매칭 ${skipped}명 제외)` : ''}</span>`;
+    $('iv-upload-preview').style.display = 'none';
+    $('iv-upload-file').value = '';
+    _ivBulkData = [];
+    showAdminToast(`✅ 면접 평가의견 ${saved}명 일괄 저장 완료`);
+  } catch(e) {
+    st.innerHTML = `<span style="color:#dc2626">❌ 저장 실패: ${e.message||e}</span>`;
+  } finally {
+    btn.disabled = false; btn.textContent = '💾 DB에 저장';
+  }
+}
+
 function switchIvSubTab(tab, btn){
   ['manual','upload'].forEach(t=>{
     const pane=$('iv-pane-'+t), tbtn=$('ivtab-'+t);
