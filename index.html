@@ -1728,7 +1728,7 @@ input, textarea, select, button { font-family: var(--font-main) !important; }
       <div class="admin-tab-item"        id="atab-raw"     onclick="switchAdminPanel('panel-raw',this)">📥 로우파일 추출</div>
       <div class="admin-tab-item"        id="atab-upload"  onclick="switchAdminPanel('panel-upload',this)">📤 데이터 업로드</div>
       <div class="admin-tab-item"        id="atab-iv"      onclick="switchAdminPanel('panel-iv',this);renderInterviewerAdmin()">👤 면접관 관리</div>
-      <div class="admin-tab-item"        id="atab-map"     onclick="switchAdminPanel('panel-map',this)">🗺️ 면접관 맵핑</div>
+      <div class="admin-tab-item"        id="atab-map"     onclick="switchAdminPanel('panel-map',this)">✍️ 면접 평가의견</div>
     </div>
 
   <div class="admin-shell">
@@ -2048,23 +2048,62 @@ input, textarea, select, button { font-family: var(--font-main) !important; }
         </div>
       </div>
 
-      <!-- 패널2: 면접관 맵핑 -->
+      <!-- 패널2: 면접 평가의견 관리 -->
       <div id="panel-map" class="admin-panel">
-        <div class="admin-panel-title">면접관 맵핑 관리</div>
-        <div class="admin-panel-sub">지원자별 심층면접 평가자를 지정합니다. 면접관은 사번 또는 성명으로 입력하세요.</div>
-        <div class="admin-select-row">
-          <select class="admin-select" id="admin-cand-sel-map" onchange="loadAdminMap()"><option value="">-- 지원자 선택 --</option></select>
-          <button class="btn-admin btn-admin-secondary" onclick="loadAdminMap()">불러오기</button>
+        <div class="admin-panel-title">면접 평가의견 관리</div>
+        <div class="admin-panel-sub">지원자별 심층면접 결과와 면접관 의견을 등록합니다. 저장된 내용은 면접관 화면에서 즉시 반영됩니다.</div>
+
+        <!-- 서브 탭 -->
+        <div style="display:flex;gap:0;margin-bottom:20px;border-bottom:2px solid var(--g200)">
+          <button id="ivtab-manual" onclick="switchIvSubTab('manual',this)"
+            style="padding:8px 18px;font-size:0.82rem;font-weight:600;background:none;border:none;border-bottom:2px solid var(--pr-500);margin-bottom:-2px;color:var(--pr-700);cursor:pointer;font-family:var(--font-main)">
+            ✏️ 수기 입력
+          </button>
+          <button id="ivtab-upload" onclick="switchIvSubTab('upload',this)"
+            style="padding:8px 18px;font-size:0.82rem;font-weight:600;background:none;border:none;border-bottom:2px solid transparent;margin-bottom:-2px;color:var(--g500);cursor:pointer;font-family:var(--font-main)">
+            📤 대량 업로드
+          </button>
         </div>
-        <div id="admin-map-form" style="display:none">
-          <div class="admin-form-section">
-            <div class="admin-form-section-title">👥 심층면접 평가자 설정</div>
-            <div class="interviewer-list" id="iv-list"></div>
-            <button class="btn-admin btn-admin-secondary" style="margin-top:12px" onclick="addInterviewer()">+ 면접관 추가</button>
+
+        <!-- 수기 입력 패널 -->
+        <div id="iv-pane-manual">
+          <div class="admin-select-row">
+            <select class="admin-select" id="admin-cand-sel-map" onchange="loadAdminMap()"><option value="">-- 지원자 선택 --</option></select>
+            <button class="btn-admin btn-admin-secondary" onclick="loadAdminMap()">불러오기</button>
           </div>
-          <div style="display:flex;gap:10px;justify-content:flex-end">
-            <button class="btn-admin btn-admin-secondary" onclick="loadAdminMap()">초기화</button>
-            <button class="btn-admin btn-admin-primary" onclick="saveAdminMap()">💾 저장 (Sheets 반영)</button>
+          <div id="admin-map-form" style="display:none">
+            <div class="admin-form-section">
+              <div class="admin-form-section-title">👥 면접관 평가의견</div>
+              <div style="display:grid;grid-template-columns:28px 1fr 100px 1fr 32px;gap:8px;padding:0 14px;margin-bottom:6px">
+                <span></span>
+                <span style="font-size:0.72rem;font-weight:600;color:var(--g500)">면접관 이름</span>
+                <span style="font-size:0.72rem;font-weight:600;color:var(--g500)">합/불 여부</span>
+                <span style="font-size:0.72rem;font-weight:600;color:var(--g500)">평가의견</span>
+                <span></span>
+              </div>
+              <div class="interviewer-list" id="iv-list"></div>
+              <button class="btn-admin btn-admin-secondary" style="margin-top:12px" onclick="addInterviewer()">+ 면접관 추가</button>
+            </div>
+            <div style="display:flex;gap:10px;justify-content:flex-end">
+              <button class="btn-admin btn-admin-secondary" onclick="loadAdminMap()">초기화</button>
+              <button class="btn-admin btn-admin-primary" onclick="saveAdminMap()">💾 저장 (DB 반영)</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 대량 업로드 패널 -->
+        <div id="iv-pane-upload" style="display:none">
+          <div class="admin-form-section">
+            <div class="admin-form-section-title">📤 면접 평가의견 대량 업로드</div>
+            <div style="background:var(--g50);border:2px dashed var(--g300);border-radius:var(--radius);padding:32px 24px;text-align:center;margin-bottom:16px">
+              <div style="font-size:2rem;margin-bottom:10px">📋</div>
+              <div style="font-size:0.9rem;font-weight:700;color:var(--g700);margin-bottom:6px">업로드 양식 준비 중</div>
+              <div style="font-size:0.78rem;color:var(--g500);line-height:1.6">대량 업로드 형식이 확정되면 여기서 엑셀 파일로<br>면접 평가의견을 일괄 등록할 수 있습니다.</div>
+            </div>
+            <div style="opacity:0.4;pointer-events:none;display:flex;align-items:center;gap:12px">
+              <input type="file" accept=".xlsx,.xls" disabled style="font-size:0.82rem;flex:1">
+              <button class="btn-admin btn-admin-primary" disabled>📥 업로드</button>
+            </div>
           </div>
         </div>
       </div>
@@ -4948,17 +4987,27 @@ function loadAdminMap(){
   if(!ivs.length) list.innerHTML=makeIvRow(0,'','','');
 }
 function makeIvRow(i,name,result,comment){
-  return `<div class="interviewer-row" id="iv-row-${i}">
-    <div class="iv-num">${i+1}</div>
-    <input class="iv-input" placeholder="면접관 성명 또는 사번" value="${name}" id="iv-name-${i}">
-    <select class="iv-input" style="max-width:90px" id="iv-result-${i}">
-      <option value="">결과</option>
-      <option value="O" ${result==='O'?'selected':''}>O (통과)</option>
-      <option value="X" ${result==='X'?'selected':''}>X (미통과)</option>
+  return `<div class="interviewer-row" id="iv-row-${i}" style="display:grid;grid-template-columns:28px 1fr 100px 1fr 32px;gap:8px;align-items:center">
+    <div class="iv-num" style="text-align:center">${i+1}</div>
+    <input class="iv-input" placeholder="면접관 이름" value="${name}" id="iv-name-${i}">
+    <select class="iv-input" id="iv-result-${i}">
+      <option value="">-</option>
+      <option value="O" ${result==='O'?'selected':''}>O (합격)</option>
+      <option value="X" ${result==='X'?'selected':''}>X (불합격)</option>
     </select>
-    <input class="iv-input" placeholder="코멘트" value="${comment}" id="iv-comment-${i}">
-    <button class="btn-remove-iv" onclick="removeIvRow(${i})" title="삭제">✕</button>
+    <input class="iv-input" placeholder="평가의견 (선택)" value="${comment}" id="iv-comment-${i}">
+    <button class="btn-remove-iv" onclick="removeIvRow(${i})" title="삭제" style="width:28px;height:28px;padding:0;display:flex;align-items:center;justify-content:center">✕</button>
   </div>`;
+}
+function switchIvSubTab(tab, btn){
+  ['manual','upload'].forEach(t=>{
+    const pane=$('iv-pane-'+t), tbtn=$('ivtab-'+t);
+    if(!pane||!tbtn) return;
+    const active = t===tab;
+    pane.style.display = active ? '' : 'none';
+    tbtn.style.borderBottomColor = active ? 'var(--pr-500)' : 'transparent';
+    tbtn.style.color = active ? 'var(--pr-700)' : 'var(--g500)';
+  });
 }
 function addInterviewer(){
   const list=$('iv-list'); const rows=list.querySelectorAll('.interviewer-row');
@@ -4976,7 +5025,7 @@ async function saveAdminMap(){
     const { error } = await _sb.from('employees').update({ interviews: c.interviews }).eq('sabun', c.sabun);
     if (error) throw new Error(error.message || 'DB 오류');
   } catch(e) { console.warn('Supabase saveMap 실패', String(e?.message||e)); }
-  showAdminToast('✅ 면접관 맵핑이 저장되었습니다');
+  showAdminToast('✅ 면접 평가의견이 저장되었습니다');
   if (curPage === 'review' && candidates[curIdx]?.sabun === c.sabun) renderCandidate(curIdx);
 }
 
