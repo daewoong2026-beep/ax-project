@@ -1728,6 +1728,7 @@ input, textarea, select, button { font-family: var(--font-main) !important; }
       <div class="admin-tab-item"        id="atab-raw"     onclick="switchAdminPanel('panel-raw',this)">📥 로우파일 추출</div>
       <div class="admin-tab-item"        id="atab-upload"  onclick="switchAdminPanel('panel-upload',this)">📤 데이터 업로드</div>
       <div class="admin-tab-item"        id="atab-iv"      onclick="switchAdminPanel('panel-iv',this);renderInterviewerAdmin()">👤 면접관 관리</div>
+      <div class="admin-tab-item"        id="atab-map"     onclick="switchAdminPanel('panel-map',this)">🗺️ 면접관 맵핑</div>
     </div>
 
   <div class="admin-shell">
@@ -3292,7 +3293,23 @@ function renderCandidate(idx) {
       </div>`).join('')
     : '<div class="empty-note">지원서 데이터 없음</div>';
 
-  /* 심층면접 섹션 삭제됨 */
+  /* 심층면접 평가의견 */
+  const ivH = (c.interviews||[]).length
+    ? (c.interviews).map(iv=>{
+        const isPass = iv.result === 'O';
+        const isFail = iv.result === 'X';
+        return `<div class="iv-card">
+          <div class="iv-result ${isPass?'pass':isFail?'fail':''}">
+            ${isPass?'O':isFail?'X':'—'}
+          </div>
+          <div style="flex:1;min-width:0">
+            <div class="iv-lbl">면접관</div>
+            <div class="iv-cmt" style="font-weight:600;margin-bottom:6px">${iv.interviewer||'—'}</div>
+            ${iv.comment?`<div class="iv-lbl">평가의견</div><div class="iv-cmt">${iv.comment}</div>`:''}
+          </div>
+        </div>`;
+      }).join('')
+    : '<div class="empty-note">면접관 평가의견 없음</div>';
 
   /* 심의유형 배지 */
   const rvCbMap = {상승:'cb-green',미달:'cb-red',재평가:'cb-blue'};
@@ -3402,6 +3419,13 @@ function renderCandidate(idx) {
       <div class="sec-body">${appH}</div>
     </div>
 
+    <!-- ⑧ 심층면접 평가의견 -->
+    <div class="sec">
+      <div class="sec-head"><div class="sec-num">8</div><div class="sec-title">심층면접 평가의견</div></div>
+      <div class="sec-body">
+        <div class="iv-grid">${ivH}</div>
+      </div>
+    </div>
 
     ${adminUser?`
     <div style="text-align:right;margin-top:8px;margin-bottom:24px">
