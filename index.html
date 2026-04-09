@@ -3380,7 +3380,7 @@ function renderCandidate(idx) {
     </div>`).join('')||'<div class="empty-note">이력 없음</div>';
 
   /* 지원서 */
-  const qLabels = {q1:'1. 상황',q2:'2. 과제',q3:'3. 목표',q4:'4. 전략',q5:'5. 수행내역',q6:'6. 결과 (최종성과)'};
+  const qLabels = {q1:'1. 상황',q2:'2. 과제',q3:'3. 목표',q4:'4. 전략',q5:'5. 한일',q6:'6. 결과 (최종성과)'};
   const appH = c.application && Object.keys(c.application).length
     ? Object.entries(c.application).map(([q,a])=>`
       <div class="app-sec">
@@ -5001,7 +5001,7 @@ function loadAdminApp(){
   const app=c.application||{};
   $('aed-q1').value=app.q1||app['1. 상황']||''; $('aed-q2').value=app.q2||app['2. 과제']||'';
   $('aed-q3').value=app.q3||app['3. 목표']||''; $('aed-q4').value=app.q4||app['4. 전략']||'';
-  $('aed-q5').value=app.q5||app['5. 한일']||app['5. 수행내역']||''; $('aed-q6').value=app.q6||app['6. 결과 (최종성과)']||app['6. 성과']||'';
+  $('aed-q5').value=app.q5||app['5. 한일']||''; $('aed-q6').value=app.q6||app['6. 결과 (최종성과)']||app['6. 성과']||'';
 }
 async function saveAdminApp(){
   const sel=$('admin-cand-sel-app'); const idx=parseInt(sel?.value); if(isNaN(idx)) return;
@@ -6069,7 +6069,7 @@ async function uploadFile2() {
       '2. 과제': 'q2', '2.과제': 'q2', '과제': 'q2',
       '3. 목표': 'q3', '3.목표': 'q3', '목표': 'q3',
       '4. 전략': 'q4', '4.전략': 'q4', '전략': 'q4',
-      '5. 한일': 'q5', '5.한일': 'q5', '한일': 'q5', '5. 수행내역': 'q5', '수행내역': 'q5',
+      '5. 한일': 'q5', '5.한일': 'q5', '한일': 'q5',
       '6. 결과(최종성과)': 'q6', '6. 결과 (최종성과)': 'q6', '6.결과': 'q6', '결과': 'q6', '6. 성과': 'q6', '성과': 'q6', '최종성과': 'q6'
     };
 
